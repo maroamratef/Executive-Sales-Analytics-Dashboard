@@ -764,9 +764,18 @@ def assign_order(
 
     carrier, carrier_options = choose_carrier(
         carriers=carriers,
-        distance_km=float(selected["distance_km_or_proxy"]),
+        distance_km=(
+            float(selected["distance_km_or_proxy"])
+            if selected["distance_method"]
+            == "Haversine distance from coordinates"
+            else None
+        ),
         weight_kg=float(weight_kg),
         late_risk=float(selected["late_risk"]),
+        distance_is_exact=(
+            selected["distance_method"]
+            == "Haversine distance from coordinates"
+        ),
     )
 
     assignment = {
