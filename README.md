@@ -95,3 +95,22 @@ It downloads the official Olist dataset directly from Kaggle, trains the AI mode
 [Open this notebook in Google Colab](https://colab.research.google.com/github/maroamratef/Executive-Sales-Analytics-Dashboard/blob/ai-freight-delivery/colab/AI_Logistics_Real_Olist.ipynb)
 
 Note: the notebook can run the analytical assignment stage with the real Olist data. Actual carrier booking requires real carrier API credentials/integration, and the public Olist dataset does not contain historical carrier-company records.
+
+
+## Real Olist automation — no Kaggle API
+
+New Colab:
+
+[Open AI Logistics Automation in Google Colab](https://colab.research.google.com/github/maroamratef/Executive-Sales-Analytics-Dashboard/blob/ai-freight-delivery/colab/AI_Logistics_Automation_Real_Olist_No_Kaggle_API.ipynb)
+
+The notebook asks you to upload the Olist `archive.zip` directly. It then:
+
+- trains freight and late-delivery AI on the real data
+- finds the nearest eligible seller using Olist geolocation
+- requests live Brazilian carrier quotes from Frenet when `FRENET_TOKEN` is configured
+- ranks shipping services by cost, ETA, and late risk
+- recommends products based on purchased items
+- generates a customer email containing the selected seller, carrier, quote/ETA, and recommendations
+- sends email only when `RESEND_API_KEY`, `EMAIL_FROM`, and an authorized `customer_id,email` mapping are supplied
+
+Carrier API and email credentials are intentionally not stored in the repository.
