@@ -114,3 +114,49 @@ The notebook asks you to upload the Olist `archive.zip` directly. It then:
 - sends email only when `RESEND_API_KEY`, `EMAIL_FROM`, and an authorized `customer_id,email` mapping are supplied
 
 Carrier API and email credentials are intentionally not stored in the repository.
+
+## Production API layer
+
+The project now includes a FastAPI gateway in `api/main.py`.
+
+### Endpoints
+
+```text
+GET  /health
+GET  /recommendations/{customer_id}
+POST /shipping/quote
+POST /orders/{order_id}/route
+POST /orders/{order_id}/email
+POST /orders/{order_id}/automate
+POST /routes/matrix
+```
+
+Run:
+
+```bash
+pip install -r api/requirements.txt
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+```
+
+Swagger UI:
+
+`http://localhost:8000/docs`
+
+### External integrations
+
+- Frenet: live Brazilian freight/carrier quotation. The documented quote API requires a client token and accepts origin CEP, destination CEP, invoice value and shipment items. citeturn362449view0turn799717search8
+- Resend: transactional customer email. citeturn629030search0
+- Google Routes API: optional road distance and traffic-aware route matrix. citeturn618215search1turn618215search2
+
+### Private data required for live automation
+
+The public Olist dataset provides ZIP prefixes, not full 8-digit CEPs, and it does not contain customer email addresses or historical carrier-account data.
+
+For live operation, provide:
+
+`config/customer_emails.csv`
+`config/seller_ceps.csv`
+
+and the corresponding Frenet/Resend/Google credentials through environment variables.
+
+The API will not invent missing email addresses, full CEPs, carrier credentials, or private customer data.
