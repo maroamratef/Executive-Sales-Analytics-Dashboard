@@ -13,9 +13,10 @@ For each order, this engine:
 Important:
 - The Olist dataset does not contain actual carrier/shipping-company history.
   Carrier choices therefore come from the external/configurable carriers CSV.
-- Exact "nearest seller" requires coordinates. With the raw Olist data the
-  customer and seller files only provide ZIP prefixes, cities and states, so
-  the fallback is an approximation.
+- The official Olist package includes olist_geolocation_dataset.csv, which
+  maps ZIP prefixes to latitude/longitude observations. This script
+  automatically calculates ZIP-prefix centroid distances from that file.
+- These are ZIP-prefix centroid distances, not doorstep GPS distances.
 """
 
 from __future__ import annotations
@@ -62,6 +63,7 @@ def load_data(data_dir: Path) -> Dict[str, pd.DataFrame]:
         "customers": "olist_customers_dataset.csv",
         "products": "olist_products_dataset.csv",
         "sellers": "olist_sellers_dataset.csv",
+        "geolocation": "olist_geolocation_dataset.csv",
     }
 
     out = {}
@@ -128,13 +130,12 @@ def load_carriers(path: Path) -> pd.DataFrame:
 def add_coordinates(
     customers: pd.DataFrame,
     sellers: pd.DataFrame,
-    geo_file: Path | None,
+    geolocation: pd.DataFrame | None = None,
+    geo_file: Path | None = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     customers = customers.copy()
     sellers = sellers.copy()
 
-    # Optional geo file:
-    # entity_type,entity_id,lat,lon
     if geo_file is not None and geo_file.exists():
         geo = pd.read_csv(geo_file)
 
@@ -177,15 +178,87 @@ def add_coordinates(
             on="customer_id",
             how="left",
         )
-
         sellers = sellers.merge(
             seller_geo,
             on="seller_id",
             how="left",
         )
 
-    return customers, sellers
+        return customers, sellers
 
+    if geolocation is not None and not geolocation.empty:
+        geo = geolocation.copy()
+
+        required = {
+            "geolocation_zip_code_prefix",
+            "geolocation_lat",
+            "geolocation_lng",
+        }
+        missing = required - set(geo.columns)
+
+        if missing:
+            raise ValueError(
+                f"Olist geolocation data missing columns: {sorted(missing)}"
+            )
+
+        geo["geolocation_zip_code_prefix"] = pd.to_numeric(
+            geo["geolocation_zip_code_prefix"],
+            errors="coerce",
+        )
+
+        centroid = (
+            geo.dropna(
+                subset=[
+                    "geolocation_zip_code_prefix",
+                    "geolocation_lat",
+                    "geolocation_lng",
+                ]
+            )
+            .groupby("geolocation_zip_code_prefix", as_index=False)
+            .agg(
+                geo_lat=("geolocation_lat", "mean"),
+                geo_lon=("geolocation_lng", "mean"),
+            )
+        )
+
+        customers["customer_zip_code_prefix"] = pd.to_numeric(
+            customers["customer_zip_code_prefix"],
+            errors="coerce",
+        )
+        sellers["seller_zip_code_prefix"] = pd.to_numeric(
+            sellers["seller_zip_code_prefix"],
+            errors="coerce",
+        )
+
+        customer_centroid = centroid.rename(
+            columns={
+                "geolocation_zip_code_prefix": "customer_zip_code_prefix",
+                "geo_lat": "customer_lat",
+                "geo_lon": "customer_lon",
+            }
+        )
+
+        seller_centroid = centroid.rename(
+            columns={
+                "geolocation_zip_code_prefix": "seller_zip_code_prefix",
+                "geo_lat": "seller_lat",
+                "geo_lon": "seller_lon",
+            }
+        )
+
+        customers = customers.merge(
+            customer_centroid,
+            on="customer_zip_code_prefix",
+            how="left",
+        )
+
+        sellers = sellers.merge(
+            seller_centroid,
+            on="seller_zip_code_prefix",
+            how="left",
+        )
+
+    return customers, sellers
 
 def proximity_proxy(
     customer_state: str,
@@ -884,7 +957,8 @@ def main() -> None:
     customers, sellers = add_coordinates(
         data["customers"],
         data["sellers"],
-        args.geo_file,
+        geolocation=data.get("geolocation"),
+        geo_file=args.geo_file,
     )
 
     data["customers"] = customers
