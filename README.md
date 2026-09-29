@@ -47,3 +47,38 @@ python python/ai_freight_delivery.py --data-dir "PATH_TO_OLIST_DATA"
 - SQL analysis
 - Python analysis notebook
 - E-Commerce Business Intelligence Report
+
+
+## Automated Logistics Assignment
+
+Run the prediction models first, then run:
+
+```bash
+python python/logistics_optimizer.py --data-dir "PATH_TO_OLIST_DATA"
+```
+
+The optimizer automatically produces:
+
+- nearest/most suitable eligible seller
+- predicted freight
+- late-delivery risk
+- selected shipping carrier
+- estimated carrier cost
+- estimated carrier ETA
+- decision explanation
+
+Configuration:
+
+`config/carriers.csv`
+
+Optional exact geography:
+
+`--geo-file PATH_TO_GEO.csv`
+
+Results:
+
+`ai_output/automated_logistics_assignments.csv`
+
+`ai_output/carrier_options_by_order.csv`
+
+See `python/AUTOMATED_LOGISTICS.md` for the full workflow.
