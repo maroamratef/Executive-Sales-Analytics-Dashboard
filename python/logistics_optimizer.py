@@ -535,6 +535,7 @@ def predict_late_risk(
     order_items: pd.DataFrame,
     seller: pd.Series,
     customer: pd.Series,
+    predicted_freight: float,
 ) -> float:
     product_weights = pd.to_numeric(
         order_items["product_weight_g"],
@@ -556,11 +557,6 @@ def predict_late_risk(
         order_items["price"],
         errors="coerce",
     )
-    freight_values = pd.to_numeric(
-        order_items.get("freight_value", 0),
-        errors="coerce",
-    )
-
     purchase_dt = pd.to_datetime(
         order["order_purchase_timestamp"],
         errors="coerce",
@@ -587,9 +583,11 @@ def predict_late_risk(
                 "unique_products": order_items["product_id"].nunique(),
                 "unique_sellers": 1,
                 "total_price": prices.sum(),
-                "total_freight": freight_values.sum(),
+                "total_freight": predicted_freight,
                 "avg_item_price": prices.mean(),
-                "avg_freight": freight_values.mean(),
+                "avg_freight": (
+                    predicted_freight / max(len(order_items), 1)
+                ),
                 "avg_weight_g": product_weights.mean(),
                 "max_weight_g": product_weights.max(),
                 "avg_volume_cm3": volume.mean(),
@@ -770,6 +768,7 @@ def assign_order(
             order_items,
             seller,
             customer,
+            predicted_freight=predicted_freight,
         )
 
         candidate_rows.append(
