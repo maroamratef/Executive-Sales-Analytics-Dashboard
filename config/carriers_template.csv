@@ -1,0 +1,4 @@
+carrier_id,carrier_name,base_fee,per_km,per_kg,max_weight_kg,base_days,days_per_500km,enabled
+CARRIER_A,REPLACE_WITH_REAL_CARRIER_A,10,0.02,1.50,30,2,0.50,true
+CARRIER_B,REPLACE_WITH_REAL_CARRIER_B,8,0.03,1.20,20,3,0.70,true
+CARRIER_C,REPLACE_WITH_REAL_CARRIER_C,15,0.015,1.80,50,1,0.35,true
