@@ -160,3 +160,29 @@ For live operation, provide:
 and the corresponding Frenet/Resend/Google credentials through environment variables.
 
 The API will not invent missing email addresses, full CEPs, carrier credentials, or private customer data.
+## One-Colab API
+
+[Open the all-APIs Colab](https://colab.research.google.com/github/maroamratef/Executive-Sales-Analytics-Dashboard/blob/ai-freight-delivery/colab/AI_Logistics_All_APIs_One_Colab.ipynb)
+
+This single notebook:
+
+- uploads and extracts the real Olist archive.zip
+- trains the freight and late-delivery models
+- starts the FastAPI service inside Colab
+- exposes seller routing, carrier quote, recommendation, email, and route-matrix endpoints
+- supports Frenet live carrier quotation
+- supports Resend customer email
+- optionally supports Google Routes road/traffic routing
+
+### Credentials
+
+Create these as Colab Secrets:
+
+`FRENET_TOKEN`
+`FRENET_PARTNER_TOKEN`
+`RESEND_API_KEY`
+`EMAIL_FROM`
+`GOOGLE_ROUTES_API_KEY` (optional)
+`APP_API_KEY` (recommended)
+
+See [API credential setup](api/CREDENTIALS.md).
