@@ -585,9 +585,10 @@ def predict_late_risk(
 
 def choose_carrier(
     carriers: pd.DataFrame,
-    distance_km: float,
+    distance_km: float | None,
     weight_kg: float,
     late_risk: float,
+    distance_is_exact: bool,
     risk_weight: float = 20.0,
 ) -> Tuple[pd.Series, pd.DataFrame]:
     rows = carriers[
@@ -599,17 +600,26 @@ def choose_carrier(
             f"No carrier can accept estimated weight {weight_kg:.2f} kg."
         )
 
-    rows["estimated_cost"] = (
-        rows["base_fee"]
-        + rows["per_km"] * distance_km
-        + rows["per_kg"] * weight_kg
-    )
+    if distance_is_exact and distance_km is not None:
+        rows["estimated_cost"] = (
+            rows["base_fee"]
+            + rows["per_km"] * distance_km
+            + rows["per_kg"] * weight_kg
+        )
 
-    rows["estimated_eta_days"] = (
-        rows["base_days"]
-        + rows["days_per_500km"]
-        * (distance_km / 500.0)
-    )
+        rows["estimated_eta_days"] = (
+            rows["base_days"]
+            + rows["days_per_500km"]
+            * (distance_km / 500.0)
+        )
+    else:
+        # Olist does not contain coordinates. Do not treat the ZIP-prefix
+        # proximity proxy as physical kilometers for carrier pricing.
+        rows["estimated_cost"] = (
+            rows["base_fee"]
+            + rows["per_kg"] * weight_kg
+        )
+        rows["estimated_eta_days"] = rows["base_days"]
 
     # Expected operational score:
     # cost + late-risk penalty + transit-time penalty.
@@ -779,6 +789,10 @@ def assign_order(
         "seller_distance_method": selected[
             "distance_method"
         ],
+        "seller_distance_is_exact": (
+            selected["distance_method"]
+            == "Haversine distance from coordinates"
+        ),
         "predicted_freight": selected[
             "predicted_freight"
         ],
