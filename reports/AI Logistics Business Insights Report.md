@@ -132,3 +132,60 @@ The freight model predicts the dataset's observed freight_value. It is not a tru
 Order data -> feature engineering -> freight prediction -> late-risk prediction -> root-cause diagnosis -> recommended intervention -> measured outcome.
 
 The measured outcome should be fed back into the process so the business can track whether interventions reduce freight cost, late deliveries, days late, and customer dissatisfaction.
+
+## 10. Automated seller and shipping-company assignment
+
+The new optimizer turns the analysis into an order-routing decision.
+
+For each order:
+
+`Customer -> eligible sellers -> seller proximity -> predicted freight -> late risk -> selected seller -> carrier options -> selected carrier`
+
+### Seller assignment
+
+The engine creates a candidate seller pool from sellers that historically handled the products in the order.
+
+The default seller score is:
+
+`50% proximity + 20% predicted freight + 30% late-delivery risk`
+
+A lower score is preferred.
+
+When coordinates are supplied, proximity is calculated with Haversine distance. With the raw Olist files, the system uses a ZIP-prefix/city/state proxy and labels it explicitly so it is not confused with physical distance.
+
+### Carrier assignment
+
+The optimizer reads carrier contracts and operating assumptions from:
+
+`config/carriers.csv`
+
+It evaluates:
+
+- carrier base fee
+- price per kilometer
+- price per kilogram
+- maximum supported weight
+- base transit days
+- distance-based transit time
+- late-risk penalty
+
+The selected carrier minimizes the combined carrier score.
+
+Because the Olist dataset has no carrier history, the carrier table must be populated with the organization's actual shipping companies, contract rates, capacity limits, and measured delivery performance before using the result as a real operational decision.
+
+### Operational automation
+
+The recommended production flow is:
+
+`New order
+-> identify products
+-> find eligible sellers
+-> select seller
+-> select carrier
+-> create shipment
+-> monitor status
+-> recalculate risk
+-> trigger exception
+-> measure actual result`
+
+The current repository implements the analytical selection stage. Actual shipment creation, carrier booking, and automatic rerouting require API integrations with the company's order-management, seller, and carrier systems.
