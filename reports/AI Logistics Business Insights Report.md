@@ -2,7 +2,7 @@
 
 ## Executive summary
 
-The existing dashboard identifies two important logistics issues: freight represents 16.60% of revenue, while the analysis reports a 7.61% late-delivery rate and 12.02 average delivery days.
+A corrected order-level recomputation on the uploaded Olist archive identifies two important logistics issues: freight is 16.57% of product revenue, the delivered-order late-delivery rate is 8.11%, and average delivery time is 12.56 days.
 
 | KPI | Observed value |
 | --- | ---: |
@@ -10,9 +10,9 @@ The existing dashboard identifies two important logistics issues: freight repres
 | Orders | 99,441 |
 | Customers | 96,096 |
 | Average Order Value | 143.54 |
-| Average Delivery Time | 12.02 days |
-| Late Delivery Rate | 7.61% |
-| Freight Cost / Revenue | 16.60% |
+| Average Delivery Time | 12.56 days |
+| Late Delivery Rate | 8.11% |
+| Freight / Product Revenue | 16.57% |
 | Repeat Customers | 2,997 |
 | New Customers | 93,099 |
 | Estimated Profit* | 4.28M |
@@ -189,3 +189,31 @@ The recommended production flow is:
 -> measure actual result`
 
 The current repository implements the analytical selection stage. Actual shipment creation, carrier booking, and automatic rerouting require API integrations with the company's order-management, seller, and carrier systems.
+
+
+## 11. Automated personalized customer message
+
+After routing an order and generating recommendations, the system can create a personalized message containing:
+
+- selected nearest eligible seller
+- seller city/state
+- seller distance
+- selected shipping company and service
+- live shipping price and ETA when Frenet is enabled
+- recommended products based on the customer's purchased item(s)
+
+The public Olist dataset has no customer email address, so the system requires an authorized `customer_id,email` mapping from the business CRM before sending.
+
+The default implementation is a dry run with one test-recipient limit. Production sending uses Resend with a server-side API key.
+
+## 12. End-to-end automation
+
+**New order -> seller matching -> geographic distance -> freight prediction -> late-risk prediction -> nearest/most suitable seller -> live carrier quotes -> carrier selection -> product recommendations -> personalized email -> shipment/tracking integration**
+
+This separates prediction from execution:
+
+- the ML layer predicts cost, risk, and recommendations
+- the routing layer chooses seller/carrier
+- the external shipping API supplies real carrier options
+- the email API communicates the decision to the authorized customer
+- the order-management/carrier APIs perform the actual shipment booking and tracking
