@@ -82,3 +82,16 @@ Results:
 `ai_output/carrier_options_by_order.csv`
 
 See `python/AUTOMATED_LOGISTICS.md` for the full workflow.
+
+
+## Colab — Real Olist Data
+
+Notebook:
+
+`colab/AI_Logistics_Real_Olist.ipynb`
+
+It downloads the official Olist dataset directly from Kaggle, trains the AI models, uses Olist geolocation for seller/customer distance, and generates automated seller/carrier assignments.
+
+[Open this notebook in Google Colab](https://colab.research.google.com/github/maroamratef/Executive-Sales-Analytics-Dashboard/blob/ai-freight-delivery/colab/AI_Logistics_Real_Olist.ipynb)
+
+Note: the notebook can run the analytical assignment stage with the real Olist data. Actual carrier booking requires real carrier API credentials/integration, and the public Olist dataset does not contain historical carrier-company records.
